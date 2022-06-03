@@ -52,7 +52,16 @@ class BDD():
         self.cur = self.conn.cursor()
         
 
-    
+    def execute_requete(self, req):
+        list_results = []
+        self.cur.execute(req)
+        if results := self.cur.fetchall():
+            for r in results:
+                list_results.append(r[0])
+        else:
+            print("No results found.")
+        return list_results
+
 
 
 class Table():
@@ -92,47 +101,58 @@ class Table():
     def fill_table(self):
         for line in self.data:
             err = False
-            fields_ok = []
-            values_ok = []
-
+            values=[]
             values=line.split('\t')
 
-            for v in range(len(values)):
-                if values[v]!="":
-                    if re.match(".*'.*", values[v]): # deal with a '
-                        new = values[v].replace("\'", "\\'")
-                        values[v] = new
-                    try:
+            # fix specific things
+            if self.name == 'CIS_COMPO_bdpm' and values[0]=="68285029":
+                values.remove("")
+                values.remove("")
+                values.remove("")
+            elif self.name == 'CIS_GENER_bdpm' and values[3] in ["67215259", "69616681"]:
+                values.remove("")
+                values.remove("")
+            elif self.name == "CIS_CIP_bdpm": # get rid of the bad columns that are annoying
+                values.pop(10)
+                values.pop(10)
+                values.pop(10)
+            elif self.name == "CIS_InfoImportantes_20220602145935_bdpm" and not re.match("6.*", values[0]):
+                err = True
+
+
+            if not err:
+                fields_ok = []
+                values_ok = []
+                for v in range(len(values)):
+                    if values[v]!="":
+                        if re.match(".*'.*", values[v]): # deal with a '
+                            new = values[v].replace("\'", "\\'")
+                            values[v] = new
                         fields_ok.append(self.fields_list[v]) # get the list of fields that aren't empty
                         values_ok.append(values[v])
-                        err = False
-                    except IndexError:
-                        err = True
-                        continue
-            
-            if err == False:
+
                 # reset
                 fields_req=""
                 values_req=""
-                
+
                 fields_req = "".join(f'{fields_ok[f]}, ' for f in range(len(fields_ok)-1)) # turn the fields into a string to put in the sql request
                 fields_req += fields_ok[-1]
 
                 numbers = []
-                
+
                 # turn the values into a string to put in the sql request
                 for v in range(len(values_ok)-1):
                     if re.match("(code|prix|numero|id).*", fields_ok[v]): # if it's a code it's an INT
                         values_req+=f"{values_ok[v]}, "
                         numbers.append(values_ok[v])
-                        
+
                     elif re.match("date.*", fields_ok[v]): # understand the dates correctly
                         if re.match(".*/.*", values_ok[v]):
                             values_req+=f"STR_TO_DATE('{values_ok[v]}', '%d/%m/%Y'), "
-                        elif re.match("/d", values_ok[v]):
-                            values_req+=f"STR_TO_DATE('{values_ok[v]}', '%Y%m%d'), "
                         elif re.match(".*\-.*", values_ok[v]):
                             values_req+=f"STR_TO_DATE('{values_ok[v]}', '%Y-%m-%d'), "
+                        else:
+                            values_req+=f"'{values_ok[v]}', "
                     else:
                         values_req+=f"'{values_ok[v]}', "
 
@@ -150,7 +170,7 @@ class Table():
 
                 try:
                     self.cur.execute(req)
-                except (mariadb.IntegrityError, mariadb.OperationalError): # skip the lines we've already added and those that bug
+                except (mariadb.IntegrityError): # skip the lines we've already added
                     pass
 
 

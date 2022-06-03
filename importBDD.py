@@ -43,8 +43,8 @@ CIP_bdpm_fields = '''code_cis INT UNIQUE,
                     code_CIP13 BIGINT CHECK (CHAR_LENGTH(code_CIP13) = 13),
                     collectivite_agree TEXT,
                     remboursement TEXT,
-                    prix_euro INT,
-                    indications TEXT,
+                    prix_euro TEXT,
+                    indications LONGTEXT,
                     FOREIGN KEY (code_cis) REFERENCES CIS_bdpm(code_cis)'''
 CIP_bdpm = Table("CIS_CIP_bdpm", CIP_bdpm_fields_list, CIP_bdpm_fields)
 CIP_bdpm.create_table()
@@ -62,7 +62,7 @@ COMPO_bdpm_fields = '''code_cis INT UNIQUE,
                     nom_substance TEXT,
                     dosage TEXT,
                     ref_dosage TEXT,
-                    nature_compo TEXT CHECK (nature_compo LIKE "SA" OR nature_compo LIKE "ST"),
+                    nature_compo TEXT,
                     numero_SA_ST INT,
                     FOREIGN KEY (code_cis) REFERENCES CIS_bdpm(code_cis)
                     '''
@@ -92,9 +92,9 @@ HAS_SMR_bdpm_fields_list = ['code_cis', 'HAS_code', 'motif_eval', 'date_avis', '
 HAS_SMR_bdpm_fields = '''code_cis INT UNIQUE,
                     HAS_code varchar(8),
                     motif_eval TEXT, 
-                    date_avis TEXT,
+                    date_avis DATE,
                     SMR_value TEXT,
-                    SMR_libelle TEXT,
+                    SMR_libelle LONGTEXT,
                     FOREIGN KEY (code_cis) REFERENCES CIS_bdpm(code_cis),
                     FOREIGN KEY (HAS_code) REFERENCES HAS_LiensPageCT_bdpm(HAS_code)
                     '''
