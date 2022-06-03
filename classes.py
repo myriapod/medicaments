@@ -59,7 +59,7 @@ class BDD():
             for r in results:
                 list_results.append(r[0])
         else:
-            print("No results found.")
+            print("Aucun résultat trouvé.")
         return list_results
 
 
