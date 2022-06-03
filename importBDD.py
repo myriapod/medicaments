@@ -1,5 +1,7 @@
 from classes import Table, BDD
 
+print("Importing database...")
+
 # we delete all of the previous database and tables when we launch this program
 
 # Creating the bdd 
@@ -26,7 +28,7 @@ CIS_bdpm = Table("CIS_bdpm", bdpm_fields_list, bdpm_fields)
 CIS_bdpm.create_table()
 CIS_bdpm.fill_table()
 
-print(" >>>>>>>>> CIS_bdpm")
+# print(" >>>>>>>>> CIS_bdpm")
 
 
 
@@ -48,7 +50,7 @@ CIP_bdpm = Table("CIS_CIP_bdpm", CIP_bdpm_fields_list, CIP_bdpm_fields)
 CIP_bdpm.create_table()
 CIP_bdpm.fill_table()
 
-print(" >>>>>>>>> CIP_bdpm")
+# print(" >>>>>>>>> CIP_bdpm")
 
 
 
@@ -68,7 +70,7 @@ COMPO_bdpm = Table("CIS_COMPO_bdpm", COMPO_bdpm_fields_list, COMPO_bdpm_fields)
 COMPO_bdpm.create_table()
 COMPO_bdpm.fill_table()
 
-print(" >>>>>>>>> COMPO_bdpm")
+# print(" >>>>>>>>> COMPO_bdpm")
 
 
 
@@ -81,7 +83,7 @@ HAS_Liens_bdpm = Table("HAS_LiensPageCT_bdpm", HAS_Liens_bdpm_fields_list, HAS_L
 HAS_Liens_bdpm.create_table()
 HAS_Liens_bdpm.fill_table()
 
-print(" >>>>>>>>> HAS_links_bdpm")
+# print(" >>>>>>>>> HAS_links_bdpm")
 
 
 
@@ -100,7 +102,7 @@ HAS_SMR_bdpm = Table("CIS_HAS_SMR_bdpm", HAS_SMR_bdpm_fields_list, HAS_SMR_bdpm_
 HAS_SMR_bdpm.create_table()
 HAS_SMR_bdpm.fill_table()
 
-print(" >>>>>>>>> HAS_SMR_bdpm")
+# print(" >>>>>>>>> HAS_SMR_bdpm")
 
 
 
@@ -119,7 +121,7 @@ HAS_ASMR_bdpm = Table("CIS_HAS_ASMR_bdpm", HAS_ASMR_bdpm_fields_list, HAS_ASMR_b
 HAS_ASMR_bdpm.create_table()
 HAS_ASMR_bdpm.fill_table()
 
-print(" >>>>>>>>> HAS_ASMR_bdpm")
+# print(" >>>>>>>>> HAS_ASMR_bdpm")
 
 
 
@@ -136,7 +138,7 @@ GENER_bdpm = Table("CIS_GENER_bdpm", GENER_bdpm_fields_list, GENER_ASMR_bdpm_fie
 GENER_bdpm.create_table()
 GENER_bdpm.fill_table()
 
-print(" >>>>>>>>> GENER_bdpm")
+# print(" >>>>>>>>> GENER_bdpm")
 
 
 
@@ -150,7 +152,7 @@ CPD_bdpm = Table("CIS_CPD_bdpm", CPD_bdpm_fields_list, CPD_bdpm_fields)
 try:
     CPD_bdpm.create_table()
     CPD_bdpm.fill_table()
-    print(" >>>>>>>>> CPD_bdpm")
+    # print(" >>>>>>>>> CPD_bdpm")
 except Exception:
     print("Failed CPD_bdpm, moving on")
 
@@ -169,4 +171,7 @@ INFO_bdpm = Table("CIS_InfoImportantes_20220602145935_bdpm", INFO_bdpm_fields_li
 INFO_bdpm.create_table()
 INFO_bdpm.fill_table()
 
-print(" >>>>>>>>> INFO_bdpm")
+# print(" >>>>>>>>> INFO_bdpm")
+
+
+print("Database imported.")

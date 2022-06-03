@@ -4,8 +4,11 @@ import mariadb
 
 
 class BDD():
-    def __init__(self, user):
+    def __init__(self, user="myri", password="myri"):
         self.user = user
+        self.password = password
+        self.cur = None
+        self.conn = None
     
     def create_bdd(self):
         # Connect to MariaDB Platform
@@ -31,10 +34,31 @@ class BDD():
         cur.execute("FLUSH PRIVILEGES")
 
         conn.close()
+        
+        
+    def connect_BDD(self):
+        try:
+            self.conn = mariadb.connect(
+                user=self.user,
+                password=self.password,
+                host="127.0.0.1",
+                port=3306,
+                database="medicaments"
+                )
+            print("Connected to medicaments")
+        except mariadb.Error as e:
+            print(f"Error connecting to MariaDB Platform: {e}")
+            sys.exit(1)
+        self.cur = self.conn.cursor()
+        
+
+    
 
 
 class Table():
-    def __init__(self, name, fields_list, fields):
+    def __init__(self, name, fields_list, fields, user="myri", password="myri"):
+        self.user = user
+        self.password = password
         self.name = name
         self.fields = fields
         self.fields_list = fields_list
@@ -45,8 +69,8 @@ class Table():
         ###
         try:
             self.conn = mariadb.connect(
-                user="myri",
-                password="myri",
+                user=self.user,
+                password=self.password,
                 host="127.0.0.1",
                 port=3306,
                 database="medicaments"
