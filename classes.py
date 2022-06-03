@@ -39,7 +39,7 @@ class Table():
         self.fields = fields
         self.fields_list = fields_list
         ###
-        with open(f'{self.name}.txt', 'r', encoding='iso-8859-15') as f:
+        with open(f'database/{self.name}.txt', 'r', encoding='iso-8859-15') as f:
             self.data = f.read().split('\n')
             self.data.pop(-1)
         ###
