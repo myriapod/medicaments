@@ -58,8 +58,7 @@ class BDD():
         list_results = []
         self.cur.execute(req)
         if results := self.cur.fetchall():
-            for r in results:
-                list_results.append(r[0])
+            list_results.extend(r[0] for r in results)
         else:
             print("Aucun résultat trouvé.")
         return list_results
@@ -184,13 +183,15 @@ class Interface():
     def __init__(self):
         self.search_type = None
         self.search_method = None
+        self.option = None
         
         
     def menu(self):
         title = 'Menu de recherche (appuyez sur ESPACE pour séléctionner, ENTREE pour choisir)'
         options = ['1) Chercher par le Nom:', '  a- contient', '  b- commence par', '2) Chercher par la Pathologie', '3) Chercher par la Substance active', '4) Quitter']
-        selected = pick(options, title, multiselect=False, min_selection_count=1)
-        self.search_type = selected[1]
+        option, index = pick(options, title)
+        self.option = option
+        self.search_type = index
 
 
     def display(self, recherche,list_results):
