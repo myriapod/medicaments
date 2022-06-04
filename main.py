@@ -6,7 +6,7 @@ from pick import pick
 
 
 create_database = ""
-# create_database = input("Do you want to create (or erase and create if it already exists) the database? ")
+create_database = input("Est-ce que vous voulez créer ou recréer la base de donnée? (Oui/Non) ")
 if re.match('(?i)yes|y|oui|o', create_database):
     import importBDD
 
