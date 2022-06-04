@@ -5,13 +5,17 @@ import sys
 from pick import pick
 
 
+user=input("Username mariadb: ")
+pswd=input(f"Password {user} mariadb: ")
+root_pswd=input("Password root mariadb ")
+
 create_database = ""
 create_database = input("Est-ce que vous voulez créer ou recréer la base de donnée? (Oui/Non) ")
 if re.match('(?i)yes|y|oui|o', create_database):
     import importBDD
 
 # setting up the database and mariaDB
-medicaments = BDD()
+medicaments = BDD(user, pswd, root_pswd)
 medicaments.connect_BDD()
 cur = medicaments.cur
 conn = medicaments.conn

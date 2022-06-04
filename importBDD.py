@@ -5,9 +5,6 @@ print("Importing database...")
 # we delete all of the previous database and tables when we launch this program
 
 # Creating the bdd
-user=input("Username mariadb: ")
-pswd=input(f"Password {user} mariadb: ")
-root_pswd=input("Password root mariadb ")
 medicaments = BDD(user, pswd, root_pswd)
 medicaments.create_bdd()
 
