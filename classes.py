@@ -5,9 +5,10 @@ from pick import pick
 
 
 class BDD():
-    def __init__(self, user="myri", password="myri"):
+    def __init__(self, user, password, root_password):
         self.user = user
         self.password = password
+        self.root_password = root_password
         self.cur = None
         self.conn = None
     
@@ -16,7 +17,7 @@ class BDD():
         try:
             conn = mariadb.connect(
                 user="root",
-                password="123456",
+                password=self.root_password,
                 host="127.0.0.1",
                 port=3306
             )
