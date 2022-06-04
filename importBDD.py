@@ -6,8 +6,9 @@ print("Importing database...")
 
 # Creating the bdd
 user=input("Username mariadb: ")
-pswd=input("Password mariadb: ")
-medicaments = BDD(user,pswd)
+pswd=input(f"Password {user} mariadb: ")
+root_pswd=input("Password root mariadb ")
+medicaments = BDD(user, pswd, root_pswd)
 medicaments.create_bdd()
 
 
