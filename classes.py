@@ -1,6 +1,7 @@
 import sys
 import re
 import mariadb
+from pick import pick
 
 
 class BDD():
@@ -45,7 +46,7 @@ class BDD():
                 port=3306,
                 database="medicaments"
                 )
-            print("Connected to medicaments")
+            # print("Connected to medicaments")
         except mariadb.Error as e:
             print(f"Error connecting to MariaDB Platform: {e}")
             sys.exit(1)
@@ -176,4 +177,29 @@ class Table():
 
         self.conn.commit()
         self.conn.close()
+
+
+class Interface():
+    def __init__(self):
+        self.search_type = None
+        self.search_method = None
+        
+        
+    def menu(self):
+        title = 'Menu de recherche (appuyez sur ESPACE pour séléctionner, ENTREE pour choisir)'
+        options = ['1) Chercher par le Nom:', '  a- contient', '  b- commence par', '2) Chercher par la Pathologie', '3) Chercher par la Substance active', '4) Quitter']
+        selected = pick(options, title, multiselect=False, min_selection_count=1)
+        self.search_type = selected[1]
+
+
+    def display(self, recherche,list_results):
+        print(f"\nRESULTATS POUR {recherche}")
+        
+        ligne=150
+        print("_"*ligne+"\n|"+" "*(ligne-2)+" |")
+        for l in list_results:
+            longueur=len(l)
+            to_fill = ligne-longueur-3
+            print(f"|  {l}" + " "*to_fill + "|")
+        print("|"+"_"*(ligne-1)+"|\n")
 
