@@ -4,6 +4,7 @@
 <a href="https://base-donnees-publique.medicaments.gouv.fr/telechargement.php">base de données publique des médicaments</a>
 
 <h3>Prérequis</h3>
+- <a href="https://mariadb.org/download/">MariaDB</a> </br>
 - Installer <a href="https://github.com/wong2/pick">pick</a> pour run le menu avec <code> pip install pick </code> </br>
 - Vérifier que tous les fichiers de base de données sont bien dans le dossier database
 
