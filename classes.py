@@ -5,7 +5,7 @@ from pick import pick
 
 
 class BDD():
-    def __init__(self, user, password, root_password):
+    def __init__(self, user, password, root_password=None):
         self.user = user
         self.password = password
         self.root_password = root_password
@@ -54,14 +54,22 @@ class BDD():
         self.cur = self.conn.cursor()
         
 
-    def execute_requete(self, req):
+    def execute_requete(self, req, nom=True):
         list_results = []
         self.cur.execute(req)
         if results := self.cur.fetchall():
             list_results.extend(r[0] for r in results)
         else:
             print("Aucun résultat trouvé.")
+            
+        #if nom:
+        #    for n in range(len(list_results)): # on récupère que le nom du médicament
+        #        list_results[n] = list_results[n].split(", ", 1)[0]
+                
         return list_results
+    
+    def execute_list_requetes(self, list_req):
+        return [self.execute_requete(req, nom=False) for req in list_req]
 
 
 
@@ -192,16 +200,142 @@ class Interface():
         option, index = pick(options, title)
         self.option = option
         self.search_type = index
+        
+    def continue_search(self):
+        choix = input("Faire une autre recherche? (Oui/Non) ")
+        if re.match('y|yes|o|oui', choix, flags=re.I):
+            return True
 
-
-    def display(self, recherche,list_results):
+    def display(self, recherche, list_results, additional_info):
+        print(f"\nRESULTATS POUR {recherche}")
+        print(" "*10+"_"*50+" "*10)
+        
+        for r in range(len(list_results)):
+            add_info=""
+            print(list_results[r])
+            try:
+                if additional_info[0][r] is not None:
+                    add_info+=f"  forme: {additional_info[0][r]}"
+                if additional_info[1][r] is not None:
+                    add_info += f"  voie: {additional_info[1][r]}"
+                if additional_info[2][r] is not None:
+                    add_info += f"  remboursement: {additional_info[2][r]}"
+                if additional_info[3][r] is not None:
+                    add_info += f"  prix: {additional_info[3][r]} €"
+            except IndexError:
+                pass
+            print(f"{add_info}\n")
+        
+    def old_display(self, recherche, list_results, additional_info):
         print(f"\nRESULTATS POUR {recherche}")
         
         ligne=150
         print("_"*ligne+"\n|"+" "*(ligne-2)+" |")
-        for l in list_results:
-            longueur=len(l)
+        for l in range(len(list_results)):
+            longueur=len(list_results[l])
             to_fill = ligne-longueur-3
-            print(f"|  {l}" + " "*to_fill + "|")
+            print(f"|  {list_results[l]}" + " "*to_fill + "|")
+            for info in additional_info:
+                print(f"|  {info[l]}" + " "*to_fill + "|")
         print("|"+"_"*(ligne-1)+"|\n")
 
+
+class Search():
+    def __init__(self, nom=None, search_type=None, pathologie=None, SA=None):
+        self.nom = nom
+        self.search_type = search_type
+        self.pathologie = pathologie
+        self.SA = SA
+        
+        
+        if self.nom is not None:
+            self.req_like = f"%{self.nom}%" if self.search_type == 1 else f"{self.nom}%"
+            self.request = f'''SELECT nom 
+                    FROM CIS_bdpm 
+                    WHERE nom LIKE '{self.req_like}' 
+                    GROUP BY CIS_bdpm.nom ASC'''
+            self.forme = f'''SELECT CIS_bdpm.forme
+                    FROM CIS_bdpm 
+                    INNER JOIN CIS_CIP_bdpm ON CIS_bdpm.code_cis=CIS_CIP_bdpm.code_cis
+                    WHERE CIS_bdpm.nom LIKE '{self.req_like}' 
+                    GROUP BY CIS_bdpm.nom ASC'''
+            self.voie = f'''SELECT CIS_bdpm.voie
+                    FROM CIS_bdpm 
+                    INNER JOIN CIS_CIP_bdpm ON CIS_bdpm.code_cis=CIS_CIP_bdpm.code_cis
+                    WHERE CIS_bdpm.nom LIKE '{self.req_like}' 
+                    GROUP BY CIS_bdpm.nom ASC'''
+            self.remboursement = f'''SELECT CIS_CIP_bdpm.remboursement 
+                    FROM CIS_bdpm 
+                    INNER JOIN CIS_CIP_bdpm ON CIS_bdpm.code_cis=CIS_CIP_bdpm.code_cis
+                    WHERE CIS_bdpm.nom LIKE '{self.req_like}' 
+                    GROUP BY CIS_bdpm.nom ASC'''
+            self.prix = f'''SELECT CIS_CIP_bdpm.prix_euro 
+                    FROM CIS_bdpm 
+                    INNER JOIN CIS_CIP_bdpm ON CIS_bdpm.code_cis=CIS_CIP_bdpm.code_cis
+                    WHERE CIS_bdpm.nom LIKE '{self.req_like}' 
+                    GROUP BY CIS_bdpm.nom ASC'''
+        
+        elif self.pathologie is not None:
+            self.request = f'''SELECT CIS_bdpm.nom, CIS_HAS_SMR_bdpm.SMR_libelle 
+                    FROM CIS_bdpm 
+                    INNER JOIN CIS_HAS_SMR_bdpm on CIS_bdpm.code_cis=CIS_HAS_SMR_bdpm.code_cis 
+                    WHERE SMR_libelle LIKE '%{self.pathologie}%' 
+                    GROUP BY CIS_bdpm.nom ASC'''
+            self.forme = f'''SELECT CIS_bdpm.forme
+                    FROM CIS_bdpm 
+                    INNER JOIN CIS_CIP_bdpm ON CIS_bdpm.code_cis=CIS_CIP_bdpm.code_cis
+                    INNER JOIN CIS_HAS_SMR_bdpm on CIS_bdpm.code_cis=CIS_HAS_SMR_bdpm.code_cis 
+                    WHERE SMR_libelle LIKE '%{self.pathologie}%' 
+                    GROUP BY CIS_bdpm.nom ASC'''
+            self.voie = f'''SELECT CIS_bdpm.voie
+                    FROM CIS_bdpm 
+                    INNER JOIN CIS_CIP_bdpm ON CIS_bdpm.code_cis=CIS_CIP_bdpm.code_cis
+                    INNER JOIN CIS_HAS_SMR_bdpm on CIS_bdpm.code_cis=CIS_HAS_SMR_bdpm.code_cis 
+                    WHERE SMR_libelle LIKE '%{self.pathologie}%' 
+                    GROUP BY CIS_bdpm.nom ASC'''
+            self.remboursement = f'''SELECT CIS_CIP_bdpm.remboursement 
+                    FROM CIS_bdpm 
+                    INNER JOIN CIS_CIP_bdpm ON CIS_bdpm.code_cis=CIS_CIP_bdpm.code_cis
+                    INNER JOIN CIS_HAS_SMR_bdpm on CIS_bdpm.code_cis=CIS_HAS_SMR_bdpm.code_cis 
+                    WHERE SMR_libelle LIKE '%{self.pathologie}%' 
+                    GROUP BY CIS_bdpm.nom ASC'''
+            self.prix = f'''SELECT CIS_CIP_bdpm.prix_euro 
+                    FROM CIS_bdpm 
+                    INNER JOIN CIS_CIP_bdpm ON CIS_bdpm.code_cis=CIS_CIP_bdpm.code_cis
+                    INNER JOIN CIS_HAS_SMR_bdpm on CIS_bdpm.code_cis=CIS_HAS_SMR_bdpm.code_cis 
+                    WHERE SMR_libelle LIKE '%{self.pathologie}%' 
+                    GROUP BY CIS_bdpm.nom ASC'''
+                
+        elif self.SA is not None:
+            self.request = f'''SELECT CIS_bdpm.nom 
+                    FROM CIS_bdpm 
+                    INNER JOIN CIS_COMPO_bdpm ON CIS_bdpm.code_cis=CIS_COMPO_bdpm.code_cis
+                    WHERE CIS_COMPO_bdpm.nom_substance LIKE '%{self.SA}%'
+                    GROUP BY CIS_bdpm.nom ASC
+                    '''
+            self.forme = f'''SELECT CIS_bdpm.forme
+                    FROM CIS_bdpm 
+                    INNER JOIN CIS_CIP_bdpm ON CIS_bdpm.code_cis=CIS_CIP_bdpm.code_cis
+                    INNER JOIN CIS_COMPO_bdpm ON CIS_bdpm.code_cis=CIS_COMPO_bdpm.code_cis
+                    WHERE CIS_COMPO_bdpm.nom_substance LIKE '%{self.SA}%'
+                    GROUP BY CIS_bdpm.nom ASC'''
+            self.voie = f'''SELECT CIS_bdpm.voie
+                    FROM CIS_bdpm 
+                    INNER JOIN CIS_CIP_bdpm ON CIS_bdpm.code_cis=CIS_CIP_bdpm.code_cis
+                    INNER JOIN CIS_COMPO_bdpm ON CIS_bdpm.code_cis=CIS_COMPO_bdpm.code_cis
+                    WHERE CIS_COMPO_bdpm.nom_substance LIKE '%{self.SA}%'
+                    GROUP BY CIS_bdpm.nom ASC'''
+            self.remboursement = f'''SELECT CIS_CIP_bdpm.remboursement 
+                    FROM CIS_bdpm 
+                    INNER JOIN CIS_CIP_bdpm ON CIS_bdpm.code_cis=CIS_CIP_bdpm.code_cis
+                    INNER JOIN CIS_COMPO_bdpm ON CIS_bdpm.code_cis=CIS_COMPO_bdpm.code_cis
+                    WHERE CIS_COMPO_bdpm.nom_substance LIKE '%{self.SA}%'
+                    GROUP BY CIS_bdpm.nom ASC'''
+            self.prix = f'''SELECT CIS_CIP_bdpm.prix_euro 
+                    FROM CIS_bdpm 
+                    INNER JOIN CIS_CIP_bdpm ON CIS_bdpm.code_cis=CIS_CIP_bdpm.code_cis
+                    INNER JOIN CIS_COMPO_bdpm ON CIS_bdpm.code_cis=CIS_COMPO_bdpm.code_cis
+                    WHERE CIS_COMPO_bdpm.nom_substance LIKE '%{self.SA}%'
+                    GROUP BY CIS_bdpm.nom ASC'''
+                    
+        self.additional_info = [self.forme, self.voie, self.remboursement, self.prix]

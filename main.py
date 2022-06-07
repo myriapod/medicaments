@@ -1,4 +1,4 @@
-from classes import BDD, Table, Interface
+from classes import BDD, Table, Interface, Search
 import re
 import mariadb
 import sys
@@ -7,66 +7,72 @@ from pick import pick
 
 user=input("Username mariadb: ")
 pswd=input(f"Password {user} mariadb: ")
-root_pswd=input("Password root mariadb ")
 
 create_database = ""
 create_database = input("Est-ce que vous voulez créer ou recréer la base de donnée? (Oui/Non) ")
 if re.match('(?i)yes|y|oui|o', create_database):
+    root_pswd=input("Password root mariadb: ")
     import importBDD
 
 # setting up the database and mariaDB
-medicaments = BDD(user, pswd, root_pswd)
+medicaments = BDD(user, pswd)
 medicaments.connect_BDD()
 cur = medicaments.cur
 conn = medicaments.conn
 
-
-interface = Interface()
-interface.menu()
-print(interface.option)
-# recherche par médicament
-if interface.search_type == 0:
-    choix = input("Recherche par nom du médicament, précision nécéssaire: Contient ou Commence par ? ")
-    if re.match("(?i)contient.*", choix):
-        interface.search_type = 1
-    elif re.match("(?i)commence.*", choix):
-        interface.search_type = 2
-    print('\033[1A', end='\x1b[2K')
+while True:
+    interface = Interface()
+    interface.menu()
+    print(interface.option)
     
+    # recherche par médicament
+    if interface.search_type == 0:
+        choix = input("Recherche par nom du médicament, précision nécéssaire: Contient ou Commence par ? ")
+        if re.match("(?i)contient.*", choix):
+            interface.search_type = 1
+        elif re.match("(?i)commence.*", choix):
+            interface.search_type = 2
+        print('\033[1A', end='\x1b[2K')
 
-if interface.search_type in [1,2]:
-    nom = input("Entrez le nom du médicament : ")
-    if interface.search_type == 1:
-        res = "contiennent"
-        req_like = f"%{nom}%"
-    else:
-        res = "commencent par"
-        req_like = f"{nom}%"
 
-    req = f"SELECT nom FROM CIS_bdpm WHERE nom LIKE '{req_like}' GROUP BY CIS_bdpm.nom ASC"
-    list_results = medicaments.execute_requete(req)
-    interface.display(f'les médicaments qui {res} {nom}',list_results)
+    if interface.search_type in [1, 2]:
+        nom = input("Entrez le nom du médicament : ")
+        res = "contiennent" if interface.search_type == 1 else "commencent par"
+        search = Search(nom=nom, search_type=interface.search_type)
+        list_results = medicaments.execute_requete(search.request)
+        additional_info = medicaments.execute_list_requetes(search.additional_info)
 
-# recherche par pathologie
-elif interface.search_type == 3:
-    pathologie = input("Entrez le nom de la pathologie : ")
-    req = f"SELECT CIS_bdpm.nom, CIS_HAS_SMR_bdpm.SMR_libelle FROM CIS_bdpm INNER JOIN CIS_HAS_SMR_bdpm on CIS_bdpm.code_cis=CIS_HAS_SMR_bdpm.code_cis WHERE SMR_libelle LIKE '%{pathologie}%' GROUP BY CIS_bdpm.nom ASC"
-    list_results = medicaments.execute_requete(req)
-    interface.display(f'la pathologie {pathologie}',list_results)
+        interface.display(f'les médicaments qui {res} {nom}', list_results, additional_info)
+        
+        if not interface.continue_search():
+            interface.search_type = 5
+            
+    elif interface.search_type == 3:
+        pathologie = input("Entrez le nom de la pathologie : ")
 
-# recherche par substance active
-elif interface.search_type == 4:
-    SA = input("Entrez la substance active : ")
-    req = f'''SELECT CIS_bdpm.nom 
-                FROM CIS_bdpm INNER JOIN CIS_COMPO_bdpm ON CIS_bdpm.code_cis=CIS_COMPO_bdpm.code_cis
-                WHERE CIS_COMPO_bdpm.nom_substance LIKE '%{SA}%'
-                GROUP BY CIS_bdpm.nom ASC
-                '''
-    list_results = medicaments.execute_requete(req)
-    interface.display(f'la substance active {SA}',list_results)
-    
-# quitter
-elif interface.search_type == 5:
-    print("Fermeture.")
+        search = Search(pathologie=pathologie)
+        list_results = medicaments.execute_requete(search.request)
+        additional_info = medicaments.execute_list_requetes(search.additional_info)
+
+        interface.display(f'la pathologie {pathologie}',list_results, additional_info)
+        
+        if not interface.continue_search():
+            interface.search_type = 5
+
+    elif interface.search_type == 4:
+        SA = input("Entrez la substance active : ")
+
+        search=Search(SA=SA)
+        list_results = medicaments.execute_requete(search.request)
+        additional_info = medicaments.execute_list_requetes(search.additional_info)
+
+        interface.display(f'la substance active {SA}',list_results, additional_info)
+        
+        if not interface.continue_search():
+            interface.search_type = 5
+
+    if interface.search_type == 5:
+        print("Fermeture.")
+        break
 
 conn.close()
